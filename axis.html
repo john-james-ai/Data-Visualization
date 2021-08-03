@@ -1,0 +1,46 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<style>
+    rect {
+        fill: lightblue;
+        stroke: black;
+    }
+</style>
+
+<body>
+    <svg width=300 height=300>
+    </svg>
+    <script>
+        var data = [4, 8, 15, 16, 23, 42];
+        var svg = d3.select("svg"),
+            margin = 50,
+            barwidth = 33.3333,
+            width = svg.attr("width"),
+            height = svg.attr("height");
+
+        var x = d3.scaleBand().domain([0, 1, 2, 3, 4, 5]).range([0, width]),
+            y = d3.scaleLinear().domain([0, 42]).range([height, 0]);
+
+        d3.select("svg")
+            .attr("width", width + 2 * margin)
+            .attr("height", height + 2 * margin)
+            .append("g")
+            .attr("transform", "translate(" + margin + "," + margin + ")")
+            .append("g")
+            .attr("transform", "translate(" + margin + "," + margin + ")")
+            .call(d3.axisLeft(y))
+            .append("g")
+            .attr("transform", "translate(" + margin + "," + height + ")")
+            .call(d3.axisBottom(x))
+            .selectAll("rect")
+            .data(data)
+            .enter().append("rect")
+            .attr("width", x.bandwith())
+            .attr("height", function (d) { return 10 * d; })
+            .attr("x", function (d, i) { return i; })
+            .attr("y", function (d) { return height - 10 * d; });
+
+    </script>
+</body>
+
+</html>

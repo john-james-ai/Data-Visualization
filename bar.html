@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<style>
+    rect {
+        fill: lightblue;
+        stroke: black;
+    }
+</style>
+<html>
+
+<body>
+    <svg width=300 height=300>
+    </svg>
+    <script>
+        var data = [4, 8, 15, 16, 23, 42];
+
+        d3.select("svg")
+            .selectAll("rect")
+            .data(data)
+            .enter().append("rect")
+            .attr("width", 33.3333)
+            .attr("height", function (d) { return 10 * d; })
+            .attr("x", function (d, i) { return 33.3333 * i; })
+            .attr("y", function (d) { return 420 - (10 * d); });
+
+    </script>
+</body>
+
+</html>
