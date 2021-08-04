@@ -12,12 +12,18 @@
     </svg>
     <script>
         var data = [4, 8, 15, 16, 23, 42];
-        var svg = d3.select("svg"),
-            margin = 50,
-            barwidth = 33.3333,
-            width = svg.attr("width") - 2 * margin,
-            height = svg.attr("height") - 2 * margin;
+        //document.getElementById("data").innerHTML = data;
+        var margin = 50, width = 200, height = 200;
 
+
+        // Append svg object to the body of the page
+        d3.select("svg")
+            .attr("width", width + margin * 2)
+            .attr("height", height + margin * 2)
+            .append("g").attr("transform", "translate(" + margin + "," + margin + ")");
+
+
+        // X Axis
         var x = d3.scaleBand().domain([0, 1, 2, 3, 4, 5]).range([0, width]);
         var y = d3.scaleLinear().domain([0, 42]).range([height, 0]);
 
@@ -29,15 +35,21 @@
             .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
             .call(d3.axisBottom(x));
 
-
         d3.select("svg")
             .selectAll("rect")
             .data(data)
             .enter().append("rect")
+            .attr("x", function (d, i) { return (i); })
+            .attr("y", function (d) { return (d); })
             .attr("width", x.bandwith())
-            .attr("height", function (d) { return 10 * d; })
-            .attr("x", function (d, i) { return i; })
-            .attr("y", function (d) { return height - 10 * d; });
+            .attr("height", function (d) { return (height - d); })
+            .attr("fill", "lightblue")
+            .attr("stroke", "black");
+
+
+
+
+
 
     </script>
 </body>
