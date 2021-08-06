@@ -12,53 +12,40 @@
     </svg>
     <script>
         async function init() {
-
-            // Set the dimensions of the plot
-            var margin = 50, width = 200, height = 200;
-
-            // Append SVG object to the body of the page
-            var svg = d3.select("body")
-                .append("svg")
-                .attr("width", width + 2 * margin)
-                .attr("height", height + 2 * margin)
-                .append("g")
-                .attr("transform", "translate(" + margin + "," + margin + ")");
-
             // Read the data
             data = await d3.csv("https://flunky.github.io/cars2017.csv").then(function (data) {
+                // Set the dimensions of the plot
 
-                //console.log(data)
+                var margin = 50, width = 200, height = 200;
 
-                // Define the scales
-                var x = d3.scaleLog(10).domain([10, 150]).range([0, width]);
-                var y = d3.scaleLog(10).domain([10, 150]).range([height, 0]);
-                var z = d3.scaleLinear().domain([4, 14]).range([4, 14]);
+                var x_scale = d3.scaleLog(10).domain([10, 150]).range([0, width]).base(10);
+                var y_scale = d3.scaleLog(10).domain([10, 150]).range([height, 0]).base(10);
+
+                // Add Circles Translated by Margin
+                svg = d3.selectAll("svg")
+                svg.append("g")
+                    .attr("transform", "translate(" + margin + "," + margin + ")")
+                    .selectAll("circle")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", function (d) { return x_scale(d.AverageCityMPG); })
+                    .attr("cy", function (d) { return y_scale(d.AverageHighwayMPG); })
+                    .attr("r", function (d, i) { return d3.sum([2, d.EngineCylinders]); })
+
+                // Add y axis
+                svg.append("g")
+                    .attr("transform", "translate(" + margin + "," + margin + ")")
+                    .call(d3.axisLeft().scale(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
 
                 // Add the x-axis
                 svg.append("g")
                     .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
-                    .call(d3.axisBottom(x).ticks(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+                    .call(d3.axisBottom().scale(x).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
 
-                // Add Average Highway MPG along y axis
-                svg.append("g")
-                    .attr("transform", "translate(" + margin + "," + margin + ")")
-                    .call(d3.axisLeft(y).ticks(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
-
-                // Add the Circles
-                svg.append("g")
-                    .selectAll("circle")
-                    .data(data)
-                    .enter().append("circle")
-                    .attr("cx", function (d) { return x(d.AverageCityMPG); })
-                    .attr("cy", function (d) { return y(d.AverageHighwayMPG); })
-                    .attr("r", function (d) { return z(2 + d.EngineCylinders); })
-                    .style("fill", "lightblue")
-                    .attr("stroke", "black");
-            })
-                .catch(function () {
-                    console.log("error loading file");
-                });
-        };
+            }
+            );
+        }
     </script>
 
 </body>
