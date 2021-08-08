@@ -1,65 +1,177 @@
+<!DOCTYPE html>
 <meta charset="utf-8">
+<style>
+    body {
+        font: 12px Helvetica;
+    }
 
-<!-- Load d3.js -->
-<script src="https://d3js.org/d3.v5.js"></script>
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
 
-<!-- Create a div where the graph will take place -->
-<div id="hdrs"></div>
-<script>
+    .x.axis path {
+        display: none;
+    }
 
-    // set the dimensions and margins of the graph
-    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+    .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 2px;
+    }
+</style>
 
-    // append the svg object to the body of the page
-    var svg = d3.select("#hdrs")
-        .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
+<body>
+    <script src="https://d3js.org/d3.v3.js"></script>
+    <script>
 
-    //Read the data
-    d3.csv("../data/SIGHD-IDS 2021.csv",
+        // ----------------------------------------------------------------- //
+        //                          1. SVG CANVAS                            //
+        // ----------------------------------------------------------------- //
+        var margin = { top: 20, right: 50, bottom: 30, left: 50 },
+            width = 960 - margin.left - margin.right,
+            height = 400 - margin.top - margin.bottom;
 
-        // When reading the csv, I must format variables:
-        function (d) {
-            return { date: d3.timeParse("%m/%d/%d")(d.date), hdrs: d.hdrs }
-        },
+        var svg = d3.select("body").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        // Now I can use this dataset:
-        function (data) {
 
-            console.log(data);
+        // ----------------------------------------------------------------- //
+        //                           2. SCALES                               //
+        // ----------------------------------------------------------------- //
+        var color = d3.scale.category10();
+        var x = d3.time.scale().range([0, width]);
+        var y = d3.scale.linear().range([height, 0]);
+        // ----------------------------------------------------------------- //
+        //                           2. DATA                                 //
+        // ----------------------------------------------------------------- //
+        var parseDate = d3.time.format("%m/%d/%Y").parse;
 
-            // Add X axis --> it is a date format
-            var x = d3.scaleTime()
-                .domain(d3.extent(data, function (d) { return d.date; }))
-                .range([0, width]);
+        d3.csv("../data/hdrs_xposed.csv", function (error, data) {
+
+
+            data.forEach(function (d) {
+                d.date = parseDate(d.Date);
+            });
+
+            var hamilton = color.domain().map(function (name) {
+                return {
+                    name: name,
+                    values: data.map(function (d) {
+                        return { date: d.date, hdrs: +d[name] };
+                    })
+                };
+            });
+            // ------------------------------------------------------------- //
+            //                          2. CONTAINER                         //
+            // ------------------------------------------------------------- //            
+            var container = svg.selectAll(".container")
+                .data(hamilton)
+                .enter().append("g")
+                .attr("class", "container");
+
+            // ------------------------------------------------------------- //
+            //                          3. DOMAINS                           //
+            // ------------------------------------------------------------- //            
+            color.domain(d3.keys(data[0]).filter(function (key) { return key !== "date"; }));
+            x.domain(d3.extent(data, function (d) { return d.date; }));
+            y.domain([
+                d3.min(hamilton, function (c) { return d3.min(c.values, function (v) { return v.hdrs; }); }),
+                d3.max(hamilton, function (c) { return d3.max(c.values, function (v) { return v.hdrs; }); })
+            ]);
+
+
+
+            // ------------------------------------------------------------- //
+            //                           4. AXES                             //
+            // ------------------------------------------------------------- //
+            var xAxis = d3.svg.axis()
+                .scale(x)
+                .ticks(7)
+                .innerTickSize(15)
+                .outerTickSize(0)
+                .orient("bottom");
+
             svg.append("g")
+                .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
-                .call(d3.axisBottom(x));
+                .call(xAxis);
 
-            // Add Y axis
-            var y = d3.scaleLinear()
-                .domain([0, d3.max(data, function (d) { return +d.hdrs; })])
-                .range([height, 0]);
+            var yAxis = d3.svg.axis()
+                .scale(y)
+                .tickFormat(function (d) { return d; })
+                .ticks(5)
+                .innerTickSize(15)
+                .outerTickSize(0)
+                .orient("left");
+
             svg.append("g")
-                .call(d3.axisLeft(y));
+                .attr("class", "y axis")
+                .call(yAxis);
 
-            // Add the line
-            svg.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", 1.5)
-                .attr("d", d3.line()
-                    .x(function (d) { return x(d.date) })
-                    .y(function (d) { return y(d.hdrs) })
-                )
+            // ------------------------------------------------------------- //
+            //                           5. LINE                             //
+            // ------------------------------------------------------------- //
+            var line = d3.svg.line()
+                .interpolate("basis")
+                .x(function (d) { return x(d.date); })
+                .y(function (d) { return y(d.hdrs); });
 
-        })
 
-</script>
+            // ------------------------------------------------------------- //
+            //                        6. GRADIENT                            //
+            // ------------------------------------------------------------- //
+            // var gradient = container.append("linearGradient")
+            //     .attr("id", "lineGradient")
+            //     .attr("x1", "0%")
+            //     .attr("x2", "100%")
+            //     .attr("y1", "0%")
+            //     .attr("y2", "100%")
+            // gradient.append("stop")
+            //     .attr('class', 'start')
+            //     .attr("offset", "0%")
+            //     .attr("stop-color", "green")
+            //     .attr("stop-opacity", 1);
+            // gradient.append("stop")
+            //     .attr('class', 'end')
+            //     .attr("offset", "100%")
+            //     .attr("stop-color", "red")
+            //     .attr("stop-opacity", 1);
+
+            // ------------------------------------------------------------- //
+            //                         7. DRAW                               //
+            // ------------------------------------------------------------- //            
+            var path = svg.selectAll(".container").append("path")
+                .attr("class", "line")
+                .attr("d", function (d) { return line(d.values); })
+                .style("stroke", "steelblue");
+            //.attr("fill", "url(#lineGradient")
+
+            // ------------------------------------------------------------- //
+            //                        8. ANIMATE                             //
+            // ------------------------------------------------------------- // 
+            // console.log(path);
+            // console.log(path.node());
+            // console.log(path[0][0]);
+
+            var totalLength = path.node().getTotalLength();
+
+            console.log(totalLength);
+
+            d3.select(path.node())
+                .attr("stroke-dasharray", totalLength + " " + totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition()
+                .duration(10000)
+                .ease("linear")
+                .attr("stroke-dashoffset", 0);
+
+
+
+        });
+
+    </script>

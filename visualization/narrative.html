@@ -32,6 +32,10 @@
 
         var parseDate = d3.time.format("%m/%d/%Y").parse;
 
+        // ----------------------------------------------------------------- //
+        //                           SCALES                                  //
+        // ----------------------------------------------------------------- //
+
         var x = d3.time.scale()
             .range([0, width]);
 
@@ -40,6 +44,9 @@
 
         var color = d3.scale.category10();
 
+        // ----------------------------------------------------------------- //
+        //                         AXES DEFINED                              //
+        // ----------------------------------------------------------------- //
         var xAxis = d3.svg.axis()
             .scale(x)
             .ticks(7)
@@ -55,11 +62,17 @@
             .outerTickSize(0)
             .orient("left");
 
+        // ----------------------------------------------------------------- //
+        //                            LINE                                   //
+        // ----------------------------------------------------------------- //
         var line = d3.svg.line()
             .interpolate("basis")
             .x(function (d) { return x(d.date); })
             .y(function (d) { return y(d.hdrs); });
 
+        // ----------------------------------------------------------------- //
+        //                           CANVAS                                  //
+        // ----------------------------------------------------------------- //
 
         var svg = d3.select("body").append("svg")
             .attr("width", width + margin.left + margin.right)
@@ -67,6 +80,10 @@
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+
+        // ----------------------------------------------------------------- //
+        //                            DATA                                   //
+        // ----------------------------------------------------------------- //            
         d3.csv("../data/hdrs_xposed.csv", function (error, data) {
             color.domain(d3.keys(data[0]).filter(function (key) { return key !== "Date"; }));
 
@@ -83,7 +100,9 @@
                 };
             });
 
-
+            // ------------------------------------------------------------- //
+            //                            DOMAINS                            //
+            // ------------------------------------------------------------- //
             x.domain(d3.extent(data, function (d) { return d.date; }));
 
             y.domain([
@@ -91,6 +110,9 @@
                 d3.max(hamilton, function (c) { return d3.max(c.values, function (v) { return v.hdrs; }); })
             ]);
 
+            // ------------------------------------------------------------- //
+            //                         AXES PLACED                           //
+            // ------------------------------------------------------------- //
             svg.append("g")
                 .attr("class", "x axis")
                 .attr("transform", "translate(0," + height + ")")
@@ -101,20 +123,6 @@
                 .call(yAxis);
 
 
-            svg.append("line")
-                .attr(
-                    {
-                        "class": "horizontalGrid",
-                        "x1": 0,
-                        "x2": width,
-                        "y1": y(0),
-                        "y2": y(0),
-                        "fill": "none",
-                        "shape-rendering": "crispEdges",
-                        "stroke": "black",
-                        "stroke-width": "1px",
-                        "stroke-dasharray": ("3, 3")
-                    });
 
 
             var rating = svg.selectAll(".rating")
