@@ -12,39 +12,43 @@
     </svg>
     <script>
         async function init() {
+            // Set the dimensions of the plot
+            var margin = 50, width = 200, height = 200;
+
+            svg = d3.selectAll("svg")
             // Read the data
             data = await d3.csv("https://flunky.github.io/cars2017.csv").then(function (data) {
-                // Set the dimensions of the plot
 
-                var margin = 50, width = 200, height = 200;
+                console.log(data)
 
-                var x_scale = d3.scaleLog(10).domain([10, 150]).range([0, width]).base(10);
-                var y_scale = d3.scaleLog(10).domain([10, 150]).range([height, 0]).base(10);
+                // Define the scales
+                var x = d3.scaleLog(10).domain([10, 150]).range([0, width]);
+                var y = d3.scaleLog(10).domain([10, 150]).range([height, 0]);
 
-                // Add Circles Translated by Margin
-                svg = d3.selectAll("svg")
+                // Add the Circles
                 svg.append("g")
                     .attr("transform", "translate(" + margin + "," + margin + ")")
                     .selectAll("circle")
                     .data(data)
-                    .enter()
-                    .append("circle")
-                    .attr("cx", function (d) { return x_scale(d.AverageCityMPG); })
-                    .attr("cy", function (d) { return y_scale(d.AverageHighwayMPG); })
-                    .attr("r", function (d, i) { return d3.sum([2, d.EngineCylinders]); })
+                    .enter().append("circle")
+                    .attr("cx", function (d) { return x(d.AverageCityMPG); })
+                    .attr("cy", function (d) { return y(d.AverageHighwayMPG); })
+                    .attr("r", function (d) { return d3.sum([2, d.EngineCylinders]); })
 
-                // Add y axis
+                // Add the y axis
                 svg.append("g")
                     .attr("transform", "translate(" + margin + "," + margin + ")")
-                    .call(d3.axisLeft().scale(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+                    .call(d3.axisLeft(y).ticks(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
 
                 // Add the x-axis
                 svg.append("g")
                     .attr("transform", "translate(" + margin + "," + (height + margin) + ")")
-                    .call(d3.axisBottom().scale(x).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+                    .call(d3.axisBottom(x).ticks(4).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
 
-            }
-            );
+            })
+                .catch(function () {
+                    console.log("error loading file");
+                });
         }
     </script>
 
